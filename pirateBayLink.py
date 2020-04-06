@@ -79,6 +79,7 @@ def main():
     table.align = "l"
     table.hrules = ALL
     table.padding_width = 4
+    sNo = 0
     for tableRow in tableRows:
         text = tableRow.text  # getting table data td
         tableData = text.split("\n")  # spliting data values
@@ -98,8 +99,9 @@ def main():
             "Size ", "")  # removing "Size" from text
         tableData[4] = tableData[4].replace(
             "ULed by ", "")  # removing "ULed" from text
-        tableData.insert(0, i)  # inserting S.No to table
+        tableData.insert(0, sNo)  # inserting S.No to table
         table.add_row(tableData)  # adding row data to table
+        sNo += 1
         # print(tableData)
 
     print(table)
