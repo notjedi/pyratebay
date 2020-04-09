@@ -79,7 +79,7 @@ def main():
     table.align = "l"
     table.hrules = ALL
     table.padding_width = 4
-    sNo = 0
+    sNo = 1
     for tableRow in tableRows:
         text = tableRow.text  # getting table data td
         tableData = text.split("\n")  # spliting data values
@@ -109,7 +109,7 @@ def main():
     # input from user
     usrIn = int(input("\nEnter the number - press 0 to exit: "))
     if usrIn == 0:
-        i = input("Do you want to do another search? (y/n)").lower()
+        i = input("Do you want to do another search(y/n)? ").lower()
         if i == 'y':
             main()
         exit(0)
@@ -129,6 +129,9 @@ def main():
     elems = soup.select(".download > a")
     torrentLink = elems[0]["href"]
     webbrowser.open(torrentLink)
+    i = input("Do you want to do another search(y/n)? ").lower()
+    if i == 'y':
+        main()
     # os.system("pause")
 
 

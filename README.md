@@ -1,8 +1,26 @@
 # pyDownloader
 
-Downloading things from pirated sites is bit of a hassle. This Python based CLI helps you to download it with ease.
+<center>
+    <img src = "images\\piratebay.png" height = 300px width = 300px>
+</center>
+<br>
 
-DISCLAIMER: This project is only for educational purposes. I am not responsible in any way if the user downloads Copyright media from pirated sites.
+> Downloading things from pirated sites is bit of a hassle. This Python based CLI helps you to download it with ease.
 
+## Dependencies
+- BeautifulSoup - `pip install bs4`
 
-                                                        UNDER PROGRESS
+## Usage
+
+```
+Usage: pirateBayLink.py |or| pirateBayLink.py [OPTIONS]
+
+OPTIONS:
+    Name of file to download as command line argument
+```
+<br>
+
+![demo.gif](images\demo.gif)
+
+## License
+Made availabe under the [MIT](LICENCE) LICENSE
