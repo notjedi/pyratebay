@@ -1,7 +1,7 @@
 # pyDownloader
 
 <center>
-    <img src = "images\\piratebay.png" height = 300px width = 300px>
+    <img src = "images/piratebay.png" height = 300px width = 300px>
 </center>
 <br>
 
@@ -18,9 +18,7 @@ Usage: pirateBayLink.py |or| pirateBayLink.py [OPTIONS]
 OPTIONS:
     Name of file to download as command line argument
 ```
-<br>
-
-![demo.gif](images\demo.gif)
+![demo.gif](images/demo.gif)
 
 ## License
-Made availabe under the [MIT](LICENCE) LICENSE
+[MIT](LICENCE) LICENSE
