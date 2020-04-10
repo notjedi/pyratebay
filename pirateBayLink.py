@@ -2,8 +2,18 @@ import urllib.parse
 import webbrowser
 import bs4
 import os
+import argparse
 import requests
 from prettytable import *
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-n', '--name', nargs='*', metavar='name',
+                    help="Name of the media to download")
+parser.add_argument('-c', '--category', default="all", choices=[
+                    "all", "audio", "video", "apps", "games", "other"], type=str, help="Searches for the given 'name' in the specified category (default = all)")
+args = parser.parse_args()
+# parser.print_help()
 
 
 def findPirateSite():
@@ -32,10 +42,14 @@ def main():
     os.system("mode 500")  # changing size of cmd
 
     # Input for text name
-    mediaName = input("Which movie/song? ")
+    if args.name != None:
+        mediaName = ' '.join(args.name)
+        typeOfMedia = args.category
+    else:
+        mediaName = input("Which movie/song? ")
+        typeOfMedia = input(
+            "Any specific type: 1.All 2.Audio 3.Video 4.Applications 5.Games 6.Other:  ").lower()
     types = ["audio", "video", "apps", "games", "other"]
-    typeOfMedia = input(
-        "Any specific type: 1.All 2.Audio 3.Video 4.Applications 5.Games 6.Other:  ").lower()
     parameters = {}
     os.system("cls")
 
