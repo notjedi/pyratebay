@@ -25,4 +25,4 @@ optional arguments:
 
 ## License
 
-[MIT](LICENCE) LICENSE
+[MIT](LICENSE) LICENSE
