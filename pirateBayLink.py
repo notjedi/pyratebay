@@ -17,13 +17,15 @@ args = parser.parse_args()
 
 
 def findPirateSite():
-    # Finding a working piratesite
+    # Finding all functional piratesite
     try:
         siteList = requests.get("https://piratebay-proxylist.net")
         siteList.raise_for_status()
     except Exception as e:
         print(e)
         exit(0)
+
+    # Obtain all functional piratesite
     soup = bs4.BeautifulSoup(siteList.text, features="lxml")
     countries = soup.select(".country")
     domains = soup.select(".domain")
@@ -32,11 +34,12 @@ def findPirateSite():
             index = countries.index(country)
             pirateSite = domains[index].getText()
             break
+
     return pirateSite
 
 
 def main():
-    # Finding a working piratesite
+    # Finding all working piratesite
     pirateSite = findPirateSite()
 
     os.system("mode 500")  # changing size of cmd
