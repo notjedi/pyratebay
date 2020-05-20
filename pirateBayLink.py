@@ -1,23 +1,21 @@
 import urllib.parse
 import webbrowser
-import bs4
 import os
 import argparse
 import requests
+from bs4 import BeautifulSoup
+from selenium import webdriver
 from prettytable import *
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument('-n', '--name', nargs='*', metavar='name',
-                    help="Name of the media to download")
-parser.add_argument('-c', '--category', default="all", choices=[
-                    "all", "audio", "video", "apps", "games", "other"], type=str, help="Searches for the given 'name' in the specified category (default = all)")
-args = parser.parse_args()
-# parser.print_help()
+from selenium.common.exceptions import InvalidArgumentException
+from selenium.webdriver.chrome.options import Options
 
 
 def findPirateSite():
-    # Finding all functional piratesite
+    """
+    Finds a functional piratebay site
+
+    @return: returns the URL of the functional piratebay site
+    """
     try:
         siteList = requests.get("https://piratebay-proxylist.net")
         siteList.raise_for_status()
@@ -25,132 +23,125 @@ def findPirateSite():
         print(e)
         exit(0)
 
-    # Obtain all functional piratesite
-    soup = bs4.BeautifulSoup(siteList.text, features="lxml")
+    # Obtain the URL of the working piratebay site
+    soup = BeautifulSoup(siteList.text, features="lxml")
     countries = soup.select(".country")
     domains = soup.select(".domain")
     for country in countries:
         if country.getText().strip() == "IN":
             index = countries.index(country)
-            pirateSite = domains[index].getText()
+            domain = domains[index].getText()
             break
 
-    return pirateSite
+    return domain
 
 
-def main():
-    # Finding all working piratesite
-    pirateSite = findPirateSite()
+def main(args):
 
-    os.system("mode 500")  # changing size of cmd
+    chromeOptions = Options()
+    chromeOptions.add_argument("--disable-logging")
+    chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging'])
+    driver = webdriver.Chrome("C:\\Program Files (x86)\\chromedriver.exe", options=chromeOptions)
+    # Finds a functional piratebay site
+    domain = findPirateSite()
 
-    # Input for text name
-    if args.name != None:
-        mediaName = ' '.join(args.name)
-        typeOfMedia = args.category
-    else:
-        mediaName = input("Which movie/song? ")
-        typeOfMedia = input(
-            "Any specific type: 1.All 2.Audio 3.Video 4.Applications 5.Games 6.Other:  ").lower()
-    types = ["audio", "video", "apps", "games", "other"]
+    # os.system("mode 500")  # changing size of cmd
+
+    # 
+    mediaName = ' '.join(args.query)
+    category = args.category
+
+    types = ["all", "audio", "video", "apps", "games", "other"]
     parameters = {}
-    os.system("cls")
+    # os.system("cls")
 
     # URL encoding and finding the URL of the final page
     for i in types:
-        if i in typeOfMedia:
+        if i in category:
             parameters.update({i: "on"})
 
-    if parameters:
-        parameters.update([('category', 0), ('page', 0), ('orderby', 99)])
-    # params = urllib.parse.urlencode(params)
-    # params = "&" if (len(params) == 0) else "&"+params+"&"
-    path = urllib.parse.quote_plus(mediaName)
-    finalUrl = "https://{0}/s/?q={1}".format(
-        pirateSite, path)  # URL after search
-    # webbrowser.open(finalUrl)
+    
+    query = urllib.parse.quote_plus(mediaName)
+    finalUrl = "https://{0}/search.php?q={1}".format(domain, query)
+    for key, value in parameters.items():
+        finalUrl += f'&{key}={value}'
 
-    # Parsing table data from search result website
     try:
-        siteFile = requests.get(url=finalUrl, params=parameters)
-        siteFile.raise_for_status()
-    except Exception as e:
+        driver.get(finalUrl)
+    except InvalidArgumentException as e:
         print(e)
-        exit(0)
-    # webbrowser.open(siteFile.url)
-    soup = bs4.BeautifulSoup(siteFile.text, features="lxml")
-    try:
-        tableRows = soup.findAll("table")[0].findAll("tr")
-    except IndexError:
-        print("\nNO TORRENTS FOUND")
-        os.system("pause >nul")
+        driver.quit()
         exit(0)
 
-    siteLinks = soup.select(".detLink")
-    del tableRows[0]
-    tableHeader = ["S.No", "Type", "Name",
+    soup = BeautifulSoup(driver.page_source, features='lxml')
+    totEntries = len(soup.select('.list-entry'))
+
+    typeOfMedia = soup.select('.item-type')
+    nameOfMedia = soup.select('.item-name')
+    uploadDate = soup.select('.item-uploaded')
+    sizeOfMedia = soup.select('.item-size')
+    uploadedBy = soup.select('.item-user')
+    seeders = soup.select('.item-seed')
+    leechers = soup.select('.item-leech')
+    magnetLinks = soup.select('.item-icons > a')
+    
+    tableRows = [None] * (totEntries + 1)
+    for i in range(0, totEntries+1):
+        tableRow = [i, typeOfMedia[i].getText(), nameOfMedia[i].getText(), uploadDate[i].getText(),
+                    sizeOfMedia[i].getText(), uploadedBy[i].getText(), seeders[i].getText(), leechers[i].getText()]
+        tableRows[i] = tableRow
+    tableRows.pop(0)
+
+
+    tableHeader = ["S.No", "Category", "Name",
                    "Upload Date", "Size", "ULed by", "SE", "LE"]
     table = PrettyTable(tableHeader)
-    # table.align["Name"] = "l"
-    # table.align["Type"] = "l"
     table.align = "l"
     table.hrules = ALL
     table.padding_width = 4
-    sNo = 1
+
     for tableRow in tableRows:
-        text = tableRow.text  # getting table data td
-        tableData = text.split("\n")  # spliting data values
-        # removing extra elements with no data
-        tableData = list(filter(("").__ne__, tableData))
-        # removing "\t\t\t" element from list
-        tableData = list(filter(("\t\t\t").__ne__, tableData))
-        # removing tab spaces from "type" data
-        tableData[1] = ' '.join(tableData[1].split())
-        # spliting Uploaded, Size and ULed data
-        tableData[3:4] = tableData[3].split(", ")
-        # joining both "type" data
-        tableData[0:2] = ["\n".join(tableData[0:2])]
-        tableData[2] = tableData[2].replace(
-            "Uploaded ", "")  # removing "Uploaded" from text
-        tableData[3] = tableData[3].replace(
-            "Size ", "")  # removing "Size" from text
-        tableData[4] = tableData[4].replace(
-            "ULed by ", "")  # removing "ULed" from text
-        tableData.insert(0, sNo)  # inserting S.No to table
-        table.add_row(tableData)  # adding row data to table
-        sNo += 1
-        # print(tableData)
+        table.add_row(tableRow)
 
     print(table)
 
-    # input from user
-    usrIn = int(input("\nEnter the number - press 0 to exit: "))
-    if usrIn == 0:
-        i = input("Do you want to do another search(y/n)? ").lower()
-        if i == 'y':
-            main()
-        exit(0)
+    userInput = int(input("\nWhich one do you wanna download? (enter 0 to exit)> "))
+    if 0 < userInput <= 100:
+        path = nameOfMedia[userInput].a.get('href')
+        finalUrl = "https://" + domain + path
     else:
-        target = siteLinks[usrIn - 1]["href"]
-        finalUrl = "https://" + pirateSite + target  # URL after selecting media
-    # webbrowser.open(finalUrl)
-
-    # Getting the link of torrent file
-    try:
-        sitefile = requests.get(finalUrl)
-        siteFile.raise_for_status()
-    except Exception as e:
-        print(e)
         exit(0)
-    soup = bs4.BeautifulSoup(sitefile.text, features="lxml")
-    elems = soup.select(".download > a")
-    torrentLink = elems[0]["href"]
-    webbrowser.open(torrentLink)
-    i = input("Do you want to do another search(y/n)? ").lower()
-    if i == 'y':
-        main()
-    # os.system("pause")
+
+    driver.get(finalUrl)
+    soup = BeautifulSoup(driver.page_source, features='lxml')
+    descriptionText = soup.select('#description_text')
+    fileNames = soup.select('.file-name')
+    fileSizes = soup.select('.file-size')
+
+    try:
+        print("\n", "Description of the media: \n\n", descriptionText[0].getText())
+    except:
+        pass
+
+    try:
+        print("\nFile List: \n")
+        for i in range(0, len(fileNames)):
+            print(fileNames[i].getText(), "\t\t\t", fileSizes[i].getText())
+    except:
+        pass
+    
+    driver.quit()
+    
+    webbrowser.open(magnetLinks[userInput-1])
 
 
 if __name__ == "__main__":
-    main()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('query', nargs='+', type=str, metavar='query',
+                        help="Name of the media to download")
+    parser.add_argument('-c', '--category', default="all", choices=[
+                        "all", "audio", "video", "apps", "games", "other"], nargs='*', dest='category', type=str, help="Searches for the given 'name' in the specified category (default = all)")
+    args = parser.parse_args()
+
+    main(args)
