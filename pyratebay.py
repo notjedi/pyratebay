@@ -101,13 +101,13 @@ def download(baseUrl, id, trackers):
     print(info['descr'])
     print()
 
-    if len(files) == 1:
-            print(files[0]['name'][0].ljust(50, ' '), end='\t\t')
-            print(format_bytes(int(files[0]['size'][0])))
-    else:
-        for file in files:
+    for file in files:
+        try:
             print(file['name']['0'].ljust(50, ' '), end='\t\t')
             print(format_bytes(int(file['size']['0'])))
+        except KeyError:
+            print(file['name'][0].ljust(50, ' '), end='\t\t')
+            print(format_bytes(int(file['size'][0])))
 
     confirm = input("\nDo you want to download this torrent(y/n)? ")
     if confirm.lower() in ["y", "yes"]:
